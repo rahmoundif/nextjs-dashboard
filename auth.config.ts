@@ -1,4 +1,5 @@
 import type { NextAuthConfig } from 'next-auth';
+import Credentials from 'next-auth/providers/credentials';
  
 export const authConfig = {
   pages: {
@@ -17,5 +18,26 @@ export const authConfig = {
       return true;
     },
   },
-  providers: [], // Add providers with an empty array for now
+  providers: [
+    Credentials({
+      name: 'Credentials',
+      credentials: {
+        email: { label: 'Email', type: 'text' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        const res = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(credentials),
+        });
+
+        const user = await res.json();
+        if (res.ok && user) {
+          return user;
+        }
+        return null;
+      },
+    }),
+  ],
 } satisfies NextAuthConfig;
